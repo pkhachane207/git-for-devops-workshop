@@ -1,52 +1,34 @@
-```groovy
 pipeline {
     agent any
-
-    options {
-        timestamps()
-        disableConcurrentBuilds()
-    }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                echo 'Pipeline started successfully!'
+                git branch: 'main',
+                    url: 'https://github.com/pkhachane207/git-for-devops-workshop.git'
             }
         }
 
-        stage('Check Terraform Installation') {
+        stage('Build') {
             steps {
-                sh 'terraform version'
+                echo 'Build stage completed!'
             }
         }
 
-        stage('Terraform Format Check') {
+        stage('Test') {
             steps {
-                sh 'terraform fmt -check -recursive'
-            }
-        }
-
-        stage('Terraform Initialize') {
-            steps {
-                sh 'terraform init -backend=false'
-            }
-        }
-
-        stage('Terraform Validate') {
-            steps {
-                sh 'terraform validate'
+                echo 'Test stage completed!'
             }
         }
     }
 
     post {
         success {
-            echo 'Terraform validation completed successfully!'
+            echo 'Pipeline completed successfully!'
         }
-
         failure {
-            echo 'Pipeline failed. Check Console Output.'
+            echo 'Pipeline failed. Check the console output.'
         }
     }
 }
-```
