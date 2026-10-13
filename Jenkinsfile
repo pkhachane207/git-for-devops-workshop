@@ -5,7 +5,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Pipeline started successfully!'
-                git branch: 'main',
+                git branch: 'master',
                     url: 'https://github.com/pkhachane207/git-for-devops-workshop.git'
             }
         }
