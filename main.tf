@@ -4,7 +4,7 @@
 
 module "vpc" {
 
-  source = "../modules/vpc"
+  source = "./modules/vpc"
 
   project_name = var.project_name
 
@@ -24,7 +24,7 @@ module "vpc" {
 
 module "security_groups" {
 
-  source = "../modules/security-groups"
+  source = "./modules/security-groups"
 
   project_name = var.project_name
 
@@ -40,7 +40,7 @@ module "security_groups" {
 
 module "iam" {
 
-  source = "../modules/iam"
+  source = "./modules/iam"
 
   project_name = var.project_name
 }
@@ -52,7 +52,7 @@ module "iam" {
 
 module "efs" {
 
-  source = "../modules/efs"
+  source = "./modules/efs"
 
   project_name = var.project_name
 
@@ -70,7 +70,7 @@ module "efs" {
 
 module "alb" {
 
-  source = "../modules/alb"
+  source = "./modules/alb"
 
   project_name = var.project_name
 
@@ -90,7 +90,7 @@ module "alb" {
 
 module "jenkins" {
 
-  source = "../modules/jenkins"
+  source = "./modules/jenkins"
 
   project_name = var.project_name
 
