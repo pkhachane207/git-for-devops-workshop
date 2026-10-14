@@ -1,6 +1,5 @@
-```groovy
 pipeline {
-    agent { label 'terraform-aws' }
+    agent any
 
     options {
         timestamps()
@@ -9,9 +8,9 @@ pipeline {
     }
 
     environment {
-        TF_IN_AUTOMATION = 'true'
-        TF_INPUT         = 'false'
-        TF_DIR           = 'terraform'
+        TF_IN_AUTOMATION   = 'true'
+        TF_INPUT           = 'false'
+        TF_DIR             = 'terraform'
         AWS_DEFAULT_REGION = 'us-east-1'
     }
 
@@ -19,7 +18,6 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Checking out Terraform code from GitHub...'
-
                 git branch: 'master',
                     url: 'https://github.com/pkhachane207/git-for-devops-workshop.git'
             }
@@ -63,18 +61,15 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 dir("${TF_DIR}") {
-                    sh '''
-                        terraform plan \
-                            -input=false \
-                            -out=tfplan
-                    '''
+                    sh 'terraform plan -input=false -out=tfplan'
+                    sh 'terraform show -no-color tfplan'
                 }
             }
         }
 
         stage('Approval') {
             steps {
-                input message: 'Review the Terraform plan. Approve infrastructure changes?',
+                input message: 'Review the Terraform plan in the console. Approve infrastructure changes?',
                       ok: 'Approve and Apply'
             }
         }
@@ -92,8 +87,6 @@ pipeline {
                 dir("${TF_DIR}") {
                     sh 'terraform output'
                 }
-
-                echo 'Terraform apply completed. Verify AWS resources and application health.'
             }
         }
     }
@@ -104,7 +97,7 @@ pipeline {
         }
 
         failure {
-            echo 'Pipeline failed. Review the Jenkins console output.'
+            echo 'Pipeline failed. Review the console output.'
         }
 
         always {
@@ -112,4 +105,3 @@ pipeline {
         }
     }
 }
-```
