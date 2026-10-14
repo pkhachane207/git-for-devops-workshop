@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -5,12 +6,13 @@ pipeline {
         timestamps()
         disableConcurrentBuilds()
         timeout(time: 45, unit: 'MINUTES')
+        skipDefaultCheckout(true)
     }
 
     environment {
         TF_IN_AUTOMATION   = 'true'
         TF_INPUT           = 'false'
-        TF_DIR             = 'terraform'
+        TF_DIR             = '.'
         AWS_DEFAULT_REGION = 'us-east-1'
     }
 
@@ -34,6 +36,24 @@ pipeline {
             }
         }
 
+        stage('Check Terraform Configuration') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh '''
+                        set -eu
+
+                        if ! find . -maxdepth 1 -type f -name '*.tf' \
+                            -print -quit | grep -q .; then
+                            echo "ERROR: No Terraform configuration files found."
+                            exit 1
+                        fi
+
+                        echo "Terraform configuration files found."
+                    '''
+                }
+            }
+        }
+
         stage('Terraform Format') {
             steps {
                 dir("${TF_DIR}") {
@@ -53,7 +73,7 @@ pipeline {
         stage('Terraform Validate') {
             steps {
                 dir("${TF_DIR}") {
-                    sh 'terraform validate'
+                    sh 'terraform validate -no-color'
                 }
             }
         }
@@ -61,15 +81,21 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 dir("${TF_DIR}") {
-                    sh 'terraform plan -input=false -out=tfplan'
-                    sh 'terraform show -no-color tfplan'
+                    sh '''
+                        set -eu
+                        terraform plan \
+                            -input=false \
+                            -no-color \
+                            -out=tfplan
+                        terraform show -no-color tfplan
+                    '''
                 }
             }
         }
 
         stage('Approval') {
             steps {
-                input message: 'Review the Terraform plan in the console. Approve infrastructure changes?',
+                input message: 'Review the Terraform plan. Approve infrastructure changes?',
                       ok: 'Approve and Apply'
             }
         }
@@ -85,7 +111,7 @@ pipeline {
         stage('Verify Infrastructure') {
             steps {
                 dir("${TF_DIR}") {
-                    sh 'terraform output'
+                    sh 'terraform output -no-color'
                 }
             }
         }
