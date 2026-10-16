@@ -20,6 +20,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Checking out Terraform code from GitHub...'
+
                 git branch: 'master',
                     url: 'https://github.com/pkhachane207/git-for-devops-workshop.git'
             }
@@ -78,29 +79,32 @@ pipeline {
             }
         }
 
-        stage('Terraform Plan') {
+        stage('Terraform Destroy Plan') {
             steps {
                 dir("${TF_DIR}") {
                     sh '''
                         set -eu
+
                         terraform plan \
+                            -destroy \
                             -input=false \
                             -no-color \
                             -out=tfplan
+
                         terraform show -no-color tfplan
                     '''
                 }
             }
         }
 
-        stage('Approval') {
+        stage('Approval to Destroy') {
             steps {
-                input message: 'Review the Terraform plan. Approve infrastructure changes?',
-                      ok: 'Approve and Apply'
+                input message: 'WARNING: Review the destroy plan. Approve deletion of the planned AWS resources?',
+                      ok: 'Destroy Infrastructure'
             }
         }
 
-        stage('Terraform Apply') {
+        stage('Terraform Destroy') {
             steps {
                 dir("${TF_DIR}") {
                     sh 'terraform apply -input=false tfplan'
@@ -108,10 +112,16 @@ pipeline {
             }
         }
 
-        stage('Verify Infrastructure') {
+        stage('Verify Destruction') {
             steps {
                 dir("${TF_DIR}") {
-                    sh 'terraform output -no-color'
+                    sh '''
+                        set -eu
+                        terraform plan \
+                            -destroy \
+                            -input=false \
+                            -no-color
+                    '''
                 }
             }
         }
@@ -119,15 +129,15 @@ pipeline {
 
     post {
         success {
-            echo 'Infrastructure pipeline completed successfully!'
+            echo 'Terraform destroy pipeline completed successfully!'
         }
 
         failure {
-            echo 'Pipeline failed. Review the console output.'
+            echo 'Destroy pipeline failed. Review the console output and Terraform state.'
         }
 
         always {
-            echo 'Infrastructure pipeline execution finished.'
+            echo 'Infrastructure destroy pipeline execution finished.'
         }
     }
 }
